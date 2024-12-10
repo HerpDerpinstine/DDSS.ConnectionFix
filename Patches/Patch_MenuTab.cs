@@ -1,5 +1,4 @@
-﻿using DDSS_ConnectionFix.Utils;
-using HarmonyLib;
+﻿using HarmonyLib;
 using Il2Cpp;
 
 namespace DDSS_ConnectionFix.Patches
@@ -18,15 +17,7 @@ namespace DDSS_ConnectionFix.Patches
                 return false;
 
             // Join Session
-            try
-            {
-                TransportSwitcher.instance.SwitchTransportToFizzySteamworks();
-                __instance.StartCoroutine(ConnectionHandler.JoinLobbyFromCode(code));
-            }
-            catch
-            {
-                ConnectionHandler.OnFailure();
-            }
+            ConnectionHandler.JoinLobbyByCode(code, false, __instance);
 
             // Prevent Original
             return false;

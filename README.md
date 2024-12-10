@@ -1,8 +1,9 @@
 # DDSS.ConnectionFix
-Fixes several Game Issues with Connection Handling in [Dale & Dawson Stationery Supplies](https://store.steampowered.com/app/2920570/Dale__Dawson_Stationery_Supplies/)
+Fixes several Game Issues with the Connection Handling in [Dale & Dawson Stationery Supplies](https://store.steampowered.com/app/2920570/Dale__Dawson_Stationery_Supplies/)
 
 - Seamless Lobby Restarts when Hosting
 - Joining Lobbies is more Reliable
+- Reconnecting to Lobbies is more Reliable
 - Loading Screen now allows Cancellation
 
 * Discord: https://discord.gg/JDw423Wskf

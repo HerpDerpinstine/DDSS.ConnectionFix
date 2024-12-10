@@ -11,7 +11,7 @@ namespace DDSS_ConnectionFix.Patches
         private static bool JoinLobby_Prefix(LobbyItem __instance)
         {
             // Join Session
-            ConnectionHandler.JoinLobby(__instance.lobbyID, false, 0.5f, __instance);
+            ConnectionHandler.JoinLobby(__instance.lobbyID, false, __instance);
 
             // Prevent Original
             return false;

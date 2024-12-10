@@ -11,7 +11,7 @@ namespace DDSS_ConnectionFix.Patches
         private static bool JoinPlayer_Prefix(FriendItem __instance)
         {
             // Join Session
-            ConnectionHandler.JoinLobby(__instance.lobbySteamID, false, 0.5f, __instance);
+            ConnectionHandler.JoinLobby(__instance.lobbySteamID, false, __instance);
 
             // Prevent Original
             return false;

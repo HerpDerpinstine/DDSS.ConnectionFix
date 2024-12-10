@@ -15,8 +15,10 @@ namespace DDSS_ConnectionFix.Patches
             if (GameManager.startClientAgain)
             {
                 GameManager.startClientAgain = false;
-                ConnectionHandler.JoinLobby(ConnectionHandler.LobbyIdSteam, true, 0.5f, __instance);
+                ConnectionHandler.ReconnectToLobby(__instance);
             }
+            else
+                ConnectionHandler.LobbyAddr = null;
 
             // Prevent Original
             return false;

@@ -17,7 +17,21 @@ namespace DDSS_ConnectionFix.Patches
         private static bool OnJoinRequest_Prefix(SteamLobby __instance, GameLobbyJoinRequested_t __0)
         {
             // Join Session
-            ConnectionHandler.JoinLobby(__0.m_steamIDLobby, false, 0.5f, __instance);
+            ConnectionHandler.JoinLobby(__0.m_steamIDLobby, false, __instance);
+
+            // Prevent Original
+            return false;
+        }
+        
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(SteamLobby), nameof(SteamLobby.OnLobbyMatchList))]
+        private static bool OnLobbyMatchList_Prefix(SteamLobby __instance, LobbyMatchList_t __0)
+        {
+            // Apply State
+            __instance.receivedLobbyList = true;
+            __instance.lobbyList = __0;
+            __instance.isJoiningLobbyByCode = false;
+            __instance.joinByCode = false;
 
             // Prevent Original
             return false;

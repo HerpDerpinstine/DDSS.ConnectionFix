@@ -45,8 +45,20 @@
       <HintPath>Libs\Il2Cppcom.rlabrecque.steamworks.net.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Il2CppFizzySteamworks">
+      <HintPath>Libs\Il2CppFizzySteamworks.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Il2Cppkcp2k">
+      <HintPath>Libs\Il2Cppkcp2k.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Il2CppMirror">
       <HintPath>Libs\Il2CppMirror.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Il2CppMirror.Transports">
+      <HintPath>Libs\Il2CppMirror.Transports.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Il2Cppmscorlib">

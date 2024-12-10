@@ -1,7 +1,10 @@
 ﻿using DDSS_ConnectionFix.Utils;
 using Il2Cpp;
 using Il2CppGameManagement;
+using Il2CppInterop.Runtime;
+using Il2Cppkcp2k;
 using Il2CppMirror;
+using Il2CppMirror.FizzySteam;
 using Il2CppSteamworks;
 using Il2CppUMUI;
 using System;
@@ -15,65 +18,97 @@ namespace DDSS_ConnectionFix
     {
         #region Private Members
 
+        private const float _waitTime = 0.5f;
+        private const float _rejoinWaitTime = 1.5f;
+
         private static Coroutine _coroutine;
         private static MonoBehaviour _coroutineParent;
+
+        private static ulong LobbyId = 0;
+        private static CSteamID LobbyIdSteam = new();
+
+        private static Il2CppSystem.Type _transportKCP = Il2CppType.Of<KcpTransport>();
+        private static Il2CppSystem.Type _transportSteamworks = Il2CppType.Of<FizzySteamworks>();
 
         #endregion
 
         #region Internal Members
 
-        internal static ulong LobbyId = 0;
-        internal static CSteamID LobbyIdSteam = new();
+        internal enum eJoinType
+        {
+            STEAM_ID,
+            INVITE_CODE,
+            DIRECT_IP
+        }
+
+        internal static string LobbyAddr;
 
         #endregion
 
         #region Internal Methods
 
-        internal static void JoinLobby(CSteamID id, bool isRejoin, float waitTime, MonoBehaviour parent)
-            => JoinLobby(id.m_SteamID, isRejoin, waitTime, parent);
-        internal static void JoinLobby(ulong id, bool isRejoin, float waitTime, MonoBehaviour parent)
+        internal static void ReconnectToLobby(MonoBehaviour parent)
+        {
+            if (!string.IsNullOrEmpty(LobbyAddr))
+                JoinLobbyByIP(LobbyAddr, true, parent);
+            else
+                JoinLobby(LobbyId, true, parent);
+        }
+        internal static void JoinLobby(CSteamID id, bool isRejoin, MonoBehaviour parent)
+            => JoinLobby(id.m_SteamID, isRejoin, parent);
+        internal static void JoinLobby(ulong id, bool isRejoin, MonoBehaviour parent)
         {
             if ((parent == null)
                 || parent.WasCollected)
                 return;
 
-            NullAttempt();
+            Cancel();
 
-            // Apply Requested SteamID
+            LobbyAddr = null;
             LobbyId = id;
             LobbyIdSteam = new(LobbyId);
 
-            // Fix Lobby Code
-            SteamLobby.instance.CurrentLobbyCode = SteamMatchmaking.GetLobbyData(LobbyIdSteam, "CODE");
-            GameManager.oldLobbyCode = SteamLobby.instance.CurrentLobbyCode;
-
             _coroutineParent = parent;
-            _coroutine = _coroutineParent.StartCoroutine(JoinLobbyCoroutine(isRejoin, waitTime));
+            _coroutine = _coroutineParent.StartCoroutine(JoinLobbyCoroutine(isRejoin, eJoinType.STEAM_ID));
         }
 
-        internal static IEnumerator JoinLobbyFromCode(string code)
+        internal static void JoinLobbyByCode(string code, bool isRejoin, MonoBehaviour parent)
         {
-            SteamLobby.instance.CancelJoinLobby();
-            ShowLoadingScreen(false);
+            if ((parent == null)
+                || parent.WasCollected)
+                return;
 
-            while (!SteamLobby.instance.receivedLobbyList)
-                yield return null;
+            Cancel();
 
-            SteamLobby.instance.isJoiningLobbyByCode = true;
+            LobbyAddr = null;
             SteamLobby.instance.CurrentLobbyCode = code;
-            SteamLobby.instance.joinByCode = true;
+            GameManager.oldLobbyCode = code;
 
-            SteamMatchmaking.AddRequestLobbyListStringFilter("STATE", "WAITING", ELobbyComparison.k_ELobbyComparisonEqual);
-            SteamMatchmaking.AddRequestLobbyListStringFilter("CODE", code, ELobbyComparison.k_ELobbyComparisonEqual);
-            SteamMatchmaking.AddRequestLobbyListDistanceFilter(ELobbyDistanceFilter.k_ELobbyDistanceFilterWorldwide);
-            SteamMatchmaking.RequestLobbyList();
+            _coroutineParent = parent;
+            _coroutine = _coroutineParent.StartCoroutine(JoinLobbyCoroutine(isRejoin, eJoinType.INVITE_CODE));
+        }
 
-            yield break;
+        internal static void JoinLobbyByIP(string addr, bool isRejoin, MonoBehaviour parent)
+        {
+            if ((parent == null)
+                || parent.WasCollected)
+                return;
+
+            Cancel();
+
+            LobbyAddr = addr;
+            SteamLobby.instance.CurrentLobbyCode = addr;
+            GameManager.oldLobbyCode = addr;
+
+            _coroutineParent = parent;
+            _coroutine = _coroutineParent.StartCoroutine(JoinLobbyCoroutine(isRejoin, eJoinType.DIRECT_IP));
         }
 
         internal static void OnFailure()
         {
             Cancel();
+            LobbyAddr = null;
+
             UIManager.instance.CloseLoadingScreen();
             UIManager.instance.ShowPopUp(
                 LocalizationManager.instance.GetLocalizedValue("Error"),
@@ -86,11 +121,14 @@ namespace DDSS_ConnectionFix
         {
             // Cache Lobby ID
             LobbyId = lobby.m_ulSteamIDLobby;
-            LobbyIdSteam = new(lobby.m_ulSteamIDLobby);
+            LobbyIdSteam = new(LobbyId);
 
             // Fix Lobby Code
-            SteamLobby.instance.CurrentLobbyCode = SteamMatchmaking.GetLobbyData(LobbyIdSteam, "CODE");
-            GameManager.oldLobbyCode = SteamLobby.instance.CurrentLobbyCode;
+            if (!NetworkServer.activeHost)
+            {
+                SteamLobby.instance.CurrentLobbyCode = SteamMatchmaking.GetLobbyData(LobbyIdSteam, "CODE");
+                GameManager.oldLobbyCode = SteamLobby.instance.CurrentLobbyCode;
+            }
         }
 
         #endregion
@@ -115,43 +153,101 @@ namespace DDSS_ConnectionFix
             _coroutine = null;
         }
 
-        private static void ShowLoadingScreen(bool isRejoin)
-		=> UIManager.instance.ShowLoadingScreen(
-			$"{(isRejoin ? "Reconnecting to" : "Joining")} Lobby...", 
-			(UnityAction)Cancel);
-
-        private static IEnumerator JoinLobbyCoroutine(bool isRejoin, float waitTime)
+        private static IEnumerator ShowLoadingScreen(bool isRejoin)
         {
             // Show Loading Screen
-            ShowLoadingScreen(isRejoin);
+            UIManager.instance.ShowLoadingScreen(
+                $"{(isRejoin ? "Reconnecting to" : "Joining")} Lobby...",
+                (UnityAction)Cancel);
+            yield return new WaitForSeconds(isRejoin ? _rejoinWaitTime : _waitTime);
+            yield break;
+        }
 
-            // Provide Time
-            yield return new WaitForSeconds(waitTime);
+        private static IEnumerator JoinLobbyCoroutine(bool isRejoin, eJoinType joinType)
+        {
+            // Show Loading Screen
+            yield return ShowLoadingScreen(isRejoin);
 
             // Attempt to join Lobby
-            yield return ReattemptUntilTimeout(6, 5, () => !NetworkClient.active, JoinLobbyBySteamID);
+            yield return ReattemptUntilTimeout(6, 5, 
+                () => !NetworkClient.active,
+                (joinType == eJoinType.INVITE_CODE) 
+                ? RequestLobbyByCode 
+                : ((joinType == eJoinType.DIRECT_IP) 
+                    ? RequestLobbyByIP
+                    : RequestLobbyBySteamID));
 
             if (!NetworkClient.active)
                 OnFailure();
 
             _coroutineParent = null;
             _coroutine = null;
-
             yield break;
         }
 
-        private static IEnumerator JoinLobbyBySteamID()
+        private static IEnumerator RequestLobbyByIP()
         {
+            // Cancel Current Attempt
             SteamLobby.instance.CancelJoinLobby();
 
             // Wait until After First Lobby List request
             while (!SteamLobby.instance.receivedLobbyList)
                 yield return null;
 
+            // Switch Transport
+            yield return SwitchTransport(_transportKCP);
+
+            // Attempt to Join
+            NetworkManager.singleton.networkAddress = LobbyAddr;
+            NetworkManager.singleton.StartClient();
+            yield break;
+        }
+
+        private static IEnumerator RequestLobbyBySteamID()
+        {
+            // Cancel Current Attempt
+            SteamLobby.instance.CancelJoinLobby();
+
+            // Wait until After First Lobby List request
+            while (!SteamLobby.instance.receivedLobbyList)
+                yield return null;
+
+            // Switch Transport
+            yield return SwitchTransport(_transportSteamworks);
+
             // Apply State
             SteamLobby.instance.receivedLobbyList = false;
             SteamLobby.instance.joinByCode = false;
-            SteamLobby.instance.CurrentLobbyCode = GameManager.oldLobbyCode;
+
+            // Request Server List
+            SteamMatchmaking.AddRequestLobbyListStringFilter("STATE", "WAITING", ELobbyComparison.k_ELobbyComparisonEqual);
+            SteamMatchmaking.AddRequestLobbyListDistanceFilter(ELobbyDistanceFilter.k_ELobbyDistanceFilterWorldwide);
+            SteamMatchmaking.RequestLobbyList();
+
+            // Await Response
+            while (!SteamLobby.instance.receivedLobbyList)
+                yield return null;
+
+            // Attempt to Join
+            SteamMatchmaking.JoinLobby(LobbyIdSteam);
+            yield break;
+        }
+
+        private static IEnumerator RequestLobbyByCode()
+        {
+            // Cancel Current Attempt
+            SteamLobby.instance.CancelJoinLobby();
+
+            // Wait until After First Lobby List request
+            while (!SteamLobby.instance.receivedLobbyList)
+                yield return null;
+
+            // Switch Transport
+            yield return SwitchTransport(_transportSteamworks);
+
+            // Apply State
+            SteamLobby.instance.receivedLobbyList = false;
+            SteamLobby.instance.joinByCode = false;
 
             // Request Server List
             SteamMatchmaking.AddRequestLobbyListStringFilter("STATE", "WAITING", ELobbyComparison.k_ELobbyComparisonEqual);
@@ -164,7 +260,46 @@ namespace DDSS_ConnectionFix
                 yield return null;
 
             // Attempt to Join
-            SteamMatchmaking.JoinLobby(LobbyIdSteam);
+            if (SteamLobby.instance.lobbyList.m_nLobbiesMatching > 0)
+            {
+                LobbyIdSteam = SteamMatchmaking.GetLobbyByIndex(0);
+                LobbyId = LobbyIdSteam.m_SteamID;
+                SteamMatchmaking.JoinLobby(LobbyIdSteam);
+            }
+            yield break;
+        }
+
+        private static IEnumerator SwitchTransport(Il2CppSystem.Type transportType)
+        {
+            if ((TransportSwitcher.instance != null)
+                && !TransportSwitcher.instance.WasCollected)
+            {
+                bool shouldSwitch = false;
+
+                if ((TransportSwitcher.instance.networkManagerInstance != null)
+                    && !TransportSwitcher.instance.networkManagerInstance.WasCollected)
+                {
+                    if (TransportSwitcher.instance.networkManagerInstance.GetIl2CppType() != transportType)
+                        shouldSwitch = true;
+                    if (shouldSwitch)
+                        GameObject.Destroy(TransportSwitcher.instance.networkManagerInstance);
+                }
+                else
+                    shouldSwitch = true;
+
+                if (shouldSwitch)
+                {
+                    yield return new WaitForSeconds(0.1f);
+
+                    TransportSwitcher.instance.networkManagerInstance =
+                        GameObject.Instantiate<NetworkManager>((transportType == _transportKCP)
+                        ? TransportSwitcher.instance.KCPPrefab
+                        : TransportSwitcher.instance.FizzyPrefab);
+
+                    yield return new WaitForSeconds(0.1f);
+                }
+            }
+            yield break;
         }
 
         private static IEnumerator ReattemptUntilTimeout(
@@ -176,8 +311,7 @@ namespace DDSS_ConnectionFix
             // Iterate Attempts
             // Attempts * SecondsPerAttempt = Timeout
             int attemptCount = 0;
-            while (checkState()
-                && (attemptCount < attempts))
+            while (true)
             {
                 // Increment Attempts
                 attemptCount++;
@@ -187,16 +321,24 @@ namespace DDSS_ConnectionFix
 
                 // Iterate Waits
                 int waitCount = 0;
-                while (checkState()
-                    && (waitCount < waitPerAttempt))
+                while (true)
                 {
                     // Increment Waits
                     waitCount++;
 
                     // Wait a Second
                     yield return new WaitForSeconds(1f);
+
+                    if (!checkState()
+                        || (waitCount >= waitPerAttempt))
+                        break;
                 }
+
+                if (!checkState()
+                    || (attemptCount >= attempts))
+                    break;
             }
+            yield break;
         }
 
         #endregion
