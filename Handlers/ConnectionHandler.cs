@@ -12,7 +12,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace DDSS_ConnectionFix
+namespace DDSS_ConnectionFix.Handlers
 {
     internal static class ConnectionHandler
     {
@@ -58,7 +58,7 @@ namespace DDSS_ConnectionFix
             => JoinLobby(id.m_SteamID, isRejoin, parent);
         internal static void JoinLobby(ulong id, bool isRejoin, MonoBehaviour parent)
         {
-            if ((parent == null)
+            if (parent == null
                 || parent.WasCollected)
                 return;
 
@@ -74,7 +74,7 @@ namespace DDSS_ConnectionFix
 
         internal static void JoinLobbyByCode(string code, bool isRejoin, MonoBehaviour parent)
         {
-            if ((parent == null)
+            if (parent == null
                 || parent.WasCollected)
                 return;
 
@@ -90,7 +90,7 @@ namespace DDSS_ConnectionFix
 
         internal static void JoinLobbyByIP(string addr, bool isRejoin, MonoBehaviour parent)
         {
-            if ((parent == null)
+            if (parent == null
                 || parent.WasCollected)
                 return;
 
@@ -143,9 +143,9 @@ namespace DDSS_ConnectionFix
 
         private static void NullAttempt()
         {
-            if ((_coroutineParent != null)
+            if (_coroutineParent != null
                 && !_coroutineParent.WasCollected
-                && (_coroutine != null)
+                && _coroutine != null
                 && !_coroutine.WasCollected)
                 _coroutineParent.StopCoroutine(_coroutine);
 
@@ -169,13 +169,13 @@ namespace DDSS_ConnectionFix
             yield return ShowLoadingScreen(isRejoin);
 
             // Attempt to join Lobby
-            yield return ReattemptUntilTimeout(6, 5, 
+            yield return ReattemptUntilTimeout(6, 5,
                 () => !NetworkClient.active,
-                (joinType == eJoinType.INVITE_CODE) 
-                ? RequestLobbyByCode 
-                : ((joinType == eJoinType.DIRECT_IP) 
+                joinType == eJoinType.INVITE_CODE
+                ? RequestLobbyByCode
+                : joinType == eJoinType.DIRECT_IP
                     ? RequestLobbyByIP
-                    : RequestLobbyBySteamID));
+                    : RequestLobbyBySteamID);
 
             if (!NetworkClient.active)
                 OnFailure();
@@ -271,18 +271,18 @@ namespace DDSS_ConnectionFix
 
         private static IEnumerator SwitchTransport(Il2CppSystem.Type transportType)
         {
-            if ((TransportSwitcher.instance != null)
+            if (TransportSwitcher.instance != null
                 && !TransportSwitcher.instance.WasCollected)
             {
                 bool shouldSwitch = false;
 
-                if ((TransportSwitcher.instance.networkManagerInstance != null)
+                if (TransportSwitcher.instance.networkManagerInstance != null
                     && !TransportSwitcher.instance.networkManagerInstance.WasCollected)
                 {
                     if (TransportSwitcher.instance.networkManagerInstance.GetIl2CppType() != transportType)
                         shouldSwitch = true;
                     if (shouldSwitch)
-                        GameObject.Destroy(TransportSwitcher.instance.networkManagerInstance);
+                        UnityEngine.Object.Destroy(TransportSwitcher.instance.networkManagerInstance);
                 }
                 else
                     shouldSwitch = true;
@@ -292,7 +292,7 @@ namespace DDSS_ConnectionFix
                     yield return new WaitForSeconds(0.1f);
 
                     TransportSwitcher.instance.networkManagerInstance =
-                        GameObject.Instantiate<NetworkManager>((transportType == _transportKCP)
+                        UnityEngine.Object.Instantiate(transportType == _transportKCP
                         ? TransportSwitcher.instance.KCPPrefab
                         : TransportSwitcher.instance.FizzyPrefab);
 
@@ -330,12 +330,12 @@ namespace DDSS_ConnectionFix
                     yield return new WaitForSeconds(1f);
 
                     if (!checkState()
-                        || (waitCount >= waitPerAttempt))
+                        || waitCount >= waitPerAttempt)
                         break;
                 }
 
                 if (!checkState()
-                    || (attemptCount >= attempts))
+                    || attemptCount >= attempts)
                     break;
             }
             yield break;
