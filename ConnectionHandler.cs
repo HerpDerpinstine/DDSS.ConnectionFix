@@ -230,7 +230,19 @@ namespace DDSS_ConnectionFix
                 yield return null;
 
             // Attempt to Join
-            SteamMatchmaking.JoinLobby(LobbyIdSteam);
+            if (SteamLobby.instance.lobbyList.m_nLobbiesMatching > 0)
+                for (int i = 0; i < SteamLobby.instance.lobbyList.m_nLobbiesMatching; i++)
+                {
+                    CSteamID id = SteamMatchmaking.GetLobbyByIndex(i);
+                    if (id.m_SteamID != LobbyId)
+                        continue;
+
+                    LobbyIdSteam = id;
+                    LobbyId = LobbyIdSteam.m_SteamID;
+                    SteamMatchmaking.JoinLobby(LobbyIdSteam);
+                    break;
+                }
+
             yield break;
         }
 
