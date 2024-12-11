@@ -20,9 +20,8 @@ namespace DDSS_ConnectionFix.Patches
         [HarmonyPatch(typeof(LobbyManager), nameof(LobbyManager.InvokeUserCode_ShowLoadingScreenRPC))]
         private static bool InvokeUserCode_ShowLoadingScreenRPC_Prefix(LobbyManager __instance)
         {
-            // Force-Show Loading Screen on Host Client
-            if (NetworkServer.activeHost)
-                UIManager.instance.OpenTab("LoadingScreen");
+            // Force-Show Loading Screen
+            UIManager.instance.OpenTab("LoadingScreen");
 
             // Prevent Original
             return false;
