@@ -172,9 +172,9 @@ namespace DDSS_ConnectionFix
             // Attempt to join Lobby
             yield return ReattemptUntilTimeout(6, 5,
                 () => !NetworkClient.active,
-                joinType == eJoinType.INVITE_CODE
+                (joinType == eJoinType.INVITE_CODE)
                 ? RequestLobbyByCode
-                : joinType == eJoinType.DIRECT_IP
+                : (joinType == eJoinType.DIRECT_IP)
                     ? RequestLobbyByIP
                     : RequestLobbyBySteamID);
 
@@ -206,9 +206,6 @@ namespace DDSS_ConnectionFix
 
         private static IEnumerator RequestLobbyBySteamID()
         {
-            // Cancel Current Attempt
-            SteamLobby.instance.CancelJoinLobby();
-
             // Wait until After First Lobby List request
             while (!SteamLobby.instance.receivedLobbyList)
                 yield return null;
@@ -236,9 +233,6 @@ namespace DDSS_ConnectionFix
 
         private static IEnumerator RequestLobbyByCode()
         {
-            // Cancel Current Attempt
-            SteamLobby.instance.CancelJoinLobby();
-
             // Wait until After First Lobby List request
             while (!SteamLobby.instance.receivedLobbyList)
                 yield return null;
