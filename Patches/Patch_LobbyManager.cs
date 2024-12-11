@@ -1,6 +1,5 @@
 ﻿using HarmonyLib;
 using Il2Cpp;
-using Il2CppMirror;
 using Il2CppUMUI;
 
 namespace DDSS_ConnectionFix.Patches
