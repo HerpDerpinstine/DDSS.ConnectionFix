@@ -20,7 +20,7 @@ namespace DDSS_ConnectionFix.Patches
         private static bool InvokeUserCode_ShowLoadingScreenRPC_Prefix(LobbyManager __instance)
         {
             // Force-Show Loading Screen
-            UIManager.instance.OpenTab("LoadingScreen");
+            //UIManager.instance.OpenTab("LoadingScreen");
 
             // Prevent Original
             return false;
