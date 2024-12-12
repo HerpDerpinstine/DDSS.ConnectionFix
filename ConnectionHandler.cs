@@ -48,6 +48,12 @@ namespace DDSS_ConnectionFix
 
         #region Internal Methods
 
+        internal static void Cancel()
+        {
+            NullAttempt();
+            SteamLobby.instance.CancelJoinLobby();
+        }
+
         internal static void ReconnectToLobby(MonoBehaviour parent)
         {
             if (!string.IsNullOrEmpty(LobbyAddr))
@@ -135,12 +141,6 @@ namespace DDSS_ConnectionFix
         #endregion
 
         #region Private Methods
-
-        private static void Cancel()
-        {
-            NullAttempt();
-            SteamLobby.instance.CancelJoinLobby();
-        }
 
         private static void NullAttempt()
         {
