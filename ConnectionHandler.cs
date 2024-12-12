@@ -166,6 +166,9 @@ namespace DDSS_ConnectionFix
 
         private static IEnumerator JoinLobbyCoroutine(bool isRejoin, eJoinType joinType)
         {
+            // Cancel Current Attempt
+            SteamLobby.instance.CancelJoinLobby();
+
             // Show Loading Screen
             yield return ShowLoadingScreen(isRejoin);
 
