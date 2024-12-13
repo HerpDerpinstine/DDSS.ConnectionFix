@@ -5,7 +5,6 @@ using Il2CppInterop.Runtime;
 using Il2Cppkcp2k;
 using Il2CppMirror;
 using Il2CppMirror.FizzySteam;
-using Il2CppPlayer.Lobby;
 using Il2CppSteamworks;
 using Il2CppUMUI;
 using System;
