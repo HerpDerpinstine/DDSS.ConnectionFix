@@ -8,8 +8,8 @@ namespace DDSS_ConnectionFix.Patches
     internal class Patch_LobbyPlayer
     {
         [HarmonyPrefix]
-        [HarmonyPatch(typeof(LobbyPlayer), nameof(LobbyPlayer.isReadyForGame), MethodType.Getter)]
-        private static bool isReadyForGame_get_Prefix(ref bool __result)
+        [HarmonyPatch(typeof(LobbyPlayer), nameof(LobbyPlayer.NetworkisReadyForGame), MethodType.Getter)]
+        private static bool NetworkisReadyForGame_get_Prefix(ref bool __result)
         {
             if (!NetworkServer.activeHost)
                 return true;
@@ -19,8 +19,8 @@ namespace DDSS_ConnectionFix.Patches
         }
 
         [HarmonyPrefix]
-        [HarmonyPatch(typeof(LobbyPlayer), nameof(LobbyPlayer.isReadyForGame), MethodType.Setter)]
-        private static void isReadyForGame_set_Prefix(ref bool __0)
+        [HarmonyPatch(typeof(LobbyPlayer), nameof(LobbyPlayer.NetworkisReadyForGame), MethodType.Setter)]
+        private static void NetworkisReadyForGame_set_Prefix(ref bool __0)
         {
             if (!NetworkServer.activeHost)
                 return;
