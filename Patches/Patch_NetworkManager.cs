@@ -18,6 +18,8 @@ namespace DDSS_ConnectionFix.Patches
                 return;
 
             UIManager.instance.OpenTab("LoadingScreen");
+
+            ConnectionHandler.SetPlayersAsReady();
         }
     }
 }

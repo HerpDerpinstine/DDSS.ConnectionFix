@@ -56,20 +56,7 @@ namespace DDSS_ConnectionFix.Patches
 
             UIManager.instance.OpenTab("LoadingScreen");
 
-            foreach (NetworkIdentity netIdentity in __instance.connectedLobbyPlayers)
-            {
-                if ((netIdentity == null)
-                    || netIdentity.WasCollected)
-                    continue;
-
-                LobbyPlayer player = netIdentity.GetComponent<LobbyPlayer>();
-                if ((player == null)
-                    || player.WasCollected)
-                    continue;
-
-                player.NetworkisReadyForGame = true;
-                player.NetworkisReadyForPlayerReplacement = true;
-            }
+            ConnectionHandler.SetPlayersAsReady();
 
             __instance.StartCoroutine(StartGameCoroutine(__instance.GetCurrentLevel().sceneName));
 

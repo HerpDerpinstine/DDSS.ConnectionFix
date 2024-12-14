@@ -5,6 +5,7 @@ using Il2CppInterop.Runtime;
 using Il2Cppkcp2k;
 using Il2CppMirror;
 using Il2CppMirror.FizzySteam;
+using Il2CppPlayer.Lobby;
 using Il2CppSteamworks;
 using Il2CppUMUI;
 using System;
@@ -128,6 +129,42 @@ namespace DDSS_ConnectionFix
             {
                 SteamLobby.instance.CurrentLobbyCode = SteamMatchmaking.GetLobbyData(LobbyIdSteam, "CODE");
                 GameManager.oldLobbyCode = SteamLobby.instance.CurrentLobbyCode;
+            }
+        }
+
+        internal static void SetPlayersAsReady()
+        {
+            if ((LobbyManager.instance == null)
+                || LobbyManager.instance.WasCollected)
+                return;
+
+            LobbyPlayer localPlayer = LobbyManager.instance.GetLocalPlayer();
+            if ((localPlayer != null)
+                && !localPlayer.WasCollected)
+            {
+                localPlayer.isReadyForGame = true;
+                localPlayer.NetworkisReadyForGame = true;
+
+                localPlayer.isReadyForPlayerReplacement = true;
+                localPlayer.NetworkisReadyForPlayerReplacement = true;
+            }
+
+            foreach (NetworkIdentity netIdentity in LobbyManager.instance.connectedLobbyPlayers)
+            {
+                if ((netIdentity == null)
+                    || netIdentity.WasCollected)
+                    continue;
+
+                LobbyPlayer player = netIdentity.GetComponent<LobbyPlayer>();
+                if ((player == null)
+                    || player.WasCollected)
+                    continue;
+
+                player.isReadyForGame = true;
+                player.NetworkisReadyForGame = true;
+
+                player.isReadyForPlayerReplacement = true;
+                player.NetworkisReadyForPlayerReplacement = true;
             }
         }
 
