@@ -31,6 +31,17 @@ namespace DDSS_ConnectionFix.Patches
         }
 
         [HarmonyPrefix]
+        [HarmonyPatch(typeof(LobbyManager), nameof(LobbyManager.IsEveryoneReadyForPlayerReplacement))]
+        private static bool IsEveryoneReadyForPlayerReplacement_Prefix(ref bool __result)
+        {
+            // Force Result to true
+            __result = true;
+
+            // Prevent Original
+            return false;
+        }
+
+        [HarmonyPrefix]
         [HarmonyPatch(typeof(LobbyManager), nameof(LobbyManager.StartGame))]
         private static bool StartGame_Prefix(LobbyManager __instance)
         {
