@@ -1,7 +1,6 @@
 ﻿using HarmonyLib;
 using Il2CppMirror;
 using Il2CppUMUI;
-using UnityEngine.Events;
 
 namespace DDSS_ConnectionFix.Patches
 {

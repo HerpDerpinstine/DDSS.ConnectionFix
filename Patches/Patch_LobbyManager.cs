@@ -2,10 +2,10 @@
 using HarmonyLib;
 using Il2Cpp;
 using Il2CppMirror;
+using Il2CppPlayer.Lobby;
 using Il2CppUMUI;
 using System.Collections;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace DDSS_ConnectionFix.Patches
 {
@@ -55,6 +55,21 @@ namespace DDSS_ConnectionFix.Patches
             SteamLobby.instance.SetLobbyStarted(true);
 
             UIManager.instance.OpenTab("LoadingScreen");
+
+            foreach (NetworkIdentity netIdentity in __instance.connectedLobbyPlayers)
+            {
+                if ((netIdentity == null)
+                    || netIdentity.WasCollected)
+                    continue;
+
+                LobbyPlayer player = netIdentity.GetComponent<LobbyPlayer>();
+                if ((player == null)
+                    || player.WasCollected)
+                    continue;
+
+                player.NetworkisReadyForGame = true;
+                player.NetworkisReadyForPlayerReplacement = true;
+            }
 
             __instance.StartCoroutine(StartGameCoroutine(__instance.GetCurrentLevel().sceneName));
 
