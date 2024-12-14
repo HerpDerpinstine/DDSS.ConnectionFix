@@ -2,6 +2,8 @@
 using HarmonyLib;
 using Il2Cpp;
 using Il2CppGameManagement.StateMachine;
+using Il2CppMirror;
+using Il2CppPlayer.Lobby;
 using System.Collections;
 using UnityEngine;
 
@@ -20,6 +22,22 @@ namespace DDSS_ConnectionFix.Patches
             if (!_startedCoroutine)
             {
                 _startedCoroutine = true;
+
+                foreach (NetworkIdentity networkIdentity in LobbyManager.instance.connectedLobbyPlayers)
+                {
+                    if ((networkIdentity == null)
+                        || networkIdentity.WasCollected)
+                        continue;
+
+                    LobbyPlayer player = networkIdentity.GetComponent<LobbyPlayer>();
+                    if ((player == null)
+                        || player.WasCollected)
+                        continue;
+
+                    player.NetworkisReadyForGame = true;
+                    player.NetworkisReadyForPlayerReplacement = true;
+                }
+
                 __instance.gameManager.StartCoroutine(StartGameCoroutine(__instance));
             }
 
