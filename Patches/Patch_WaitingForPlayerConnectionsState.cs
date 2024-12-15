@@ -28,7 +28,7 @@ namespace DDSS_ConnectionFix.Patches
 
             // Change State
             if ((TutorialManager.instance != null)
-                && TutorialManager.instance.WasCollected
+                && !TutorialManager.instance.WasCollected
                 && TutorialManager.instance.isTutorialActive)
             {
                 __instance.ChangeState(GameStates.Tutorial);

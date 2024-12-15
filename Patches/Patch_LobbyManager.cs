@@ -2,7 +2,6 @@
 using HarmonyLib;
 using Il2Cpp;
 using Il2CppMirror;
-using Il2CppPlayer.Lobby;
 using Il2CppUMUI;
 using System.Collections;
 using UnityEngine;
@@ -32,7 +31,8 @@ namespace DDSS_ConnectionFix.Patches
         [HarmonyPatch(typeof(LobbyManager), nameof(LobbyManager.StartGame))]
         private static bool StartGame_Prefix(LobbyManager __instance)
         {
-            if (!__instance.isServer)
+            if (!__instance.isServer
+                || __instance.gameStarted)
                 return false;
 
             __instance.gameStarted = true;
