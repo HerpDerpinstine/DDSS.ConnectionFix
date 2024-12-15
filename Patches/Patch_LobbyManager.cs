@@ -12,8 +12,6 @@ namespace DDSS_ConnectionFix.Patches
     [HarmonyPatch]
     internal class Patch_LobbyManager
     {
-        private static bool _startedCoroutine = false;
-
         [HarmonyPrefix]
         [HarmonyPatch(typeof(LobbyManager), nameof(LobbyManager.ShowLoadingScreenRPC))]
         private static bool ShowLoadingScreenRPC_Prefix()
@@ -31,25 +29,11 @@ namespace DDSS_ConnectionFix.Patches
         }
 
         [HarmonyPrefix]
-        [HarmonyPatch(typeof(LobbyManager), nameof(LobbyManager.IsEveryoneReadyForPlayerReplacement))]
-        private static bool IsEveryoneReadyForPlayerReplacement_Prefix(ref bool __result)
-        {
-            // Force Result to true
-            __result = true;
-
-            // Prevent Original
-            return false;
-        }
-
-        [HarmonyPrefix]
         [HarmonyPatch(typeof(LobbyManager), nameof(LobbyManager.StartGame))]
         private static bool StartGame_Prefix(LobbyManager __instance)
         {
-            if (!__instance.isServer
-                || _startedCoroutine)
+            if (!__instance.isServer)
                 return false;
-
-            _startedCoroutine = true;
 
             __instance.gameStarted = true;
             SteamLobby.instance.SetLobbyStarted(true);
@@ -73,7 +57,6 @@ namespace DDSS_ConnectionFix.Patches
             NetworkManager.singleton.ServerChangeScene(sceneName);
 
             // Finish Coroutine
-            _startedCoroutine = false;
             yield break;
         }
     }
